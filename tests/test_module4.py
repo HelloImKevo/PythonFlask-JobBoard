@@ -170,8 +170,14 @@ def test_app_jobs_route_jobs_module4():
     jobs_function = "jobs" in dir(app)
     assert jobs_function, "Have you created the `jobs` function?"
 
-    execute_sql = "execute_sql:SELECT job.id, job.title, job.description, job.salary, employer.id as employer_id, employer.name as employer_name FROM job JOIN employer ON employer.id = job.employer_id"
-    sql_exists = execute_sql in get_functions(app.jobs)
+    execute_sql = "execute_sql"
+    functions: list = get_functions(app.jobs)
+    sql_exists: bool = False
+    for function_signature in functions:
+        if execute_sql in function_signature:
+            sql_exists = True
+            break
+
     assert sql_exists, "`execute_sql` has not been called or has the wrong parameters."
 
     new_render_call = "render_template:index.html:jobs:jobs" in get_functions(app.jobs)
