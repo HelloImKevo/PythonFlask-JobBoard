@@ -4,6 +4,7 @@ import sqlite3
 from flask import g
 from flask import Flask
 from flask import render_template
+from flask import request
 
 PATH = 'db/jobs.sqlite'
 
@@ -58,3 +59,27 @@ def job(job_id):
              "WHERE job.id = ?")
     job = execute_sql(query, job_id, single=True)
     return render_template('job.html', job=job)
+
+
+@app.route('/employer/<employer_id>')
+def employer(employer_id):
+    # Debugging code
+    print(type(employer_id), employer_id)
+    print(type(request.data), request.data)
+    for argument in request.args:
+        print(type(argument), argument)
+
+    # SQL parameter bindings must be a tuple (iterable) - input parameter is a string
+    employer_id: tuple = (employer_id,)
+    employer = execute_sql('SELECT * FROM employer WHERE id = ?', employer_id, single=True)
+    jobs_query = ("SELECT job.id, job.title, job.description, job.salary " +
+                  "FROM job " +
+                  "JOIN employer ON employer.id = job.employer_id " +
+                  "WHERE employer.id = ?")
+    jobs = execute_sql(jobs_query, employer_id)
+    reviews_query = ("SELECT review, rating, title, date, status " +
+                     "FROM review " +
+                     "JOIN employer ON employer.id = review.employer_id " +
+                     "WHERE employer.id = ?")
+    reviews = execute_sql(reviews_query, employer_id)
+    return render_template('employer.html', employer=employer, jobs=jobs, reviews=reviews)
